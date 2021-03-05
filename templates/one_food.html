@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block headscripts %}
+{#<script>#}
+{#let nutrientsTable = document.getElementById("nutrientsTable");#}
+{#let nutrientsTableHead  = ['NutrientID','NutrientName','NutrientValue','NutrientUnit'];#}
+{#let nutrients = JSON.parse( {{ json_nutrients | tojson }} );#}
+{#document.querySelector('button').addEventListener('click', () => {})#}
+{#document.getElementById('updateNutrientAmounts').onclick = function () {#}
+{#    nutrientsTable.removeChild(nutrientsTable.firstElementChild);}#}
+{#</script>#}
+{% endblock %}
+
+{% block header %}
+    <h1>{% block title %} Food {{ food[0] }} -
+                {{ food[1] }} -
+                {{ food[2] }}
+    {% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <p>
+    <form method="post">
+        <label>Amounts per
+            <input name="serving_amount" id="serving_amount" type="number" value="{{ serving_amount }}">
+            g of food.
+        </label>
+        <input id="updateNutrientAmounts" type="submit" value="Update nutrient amounts">
+    </form>
+
+
+    {# choose different amounts #} </p>
+    {# add a form to choose different amounts #}
+
+    <table>
+    <thead>
+        <tr>
+            <th style="text-align: left">FoodID</th>
+            <th style="text-align: left">FoodDescription</th>
+            <th style="text-align: left">FoodDescriptionF</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                {{ food[0] }}
+            </td>
+            <td>
+                {{ food[1] }}
+            </td>
+            <td>
+                {{ food[2] }}
+            </td>
+        </tr>
+    </tbody>
+    </table>
+
+<!--    <table id="nutrientsTable" class="nutrientsTable">
+    </table>
+    <script>
+function generateTableHead(table, data) {
+  let thead = table.createTHead();
+  let row = thead.insertRow();
+  for (let key of data) {
+    let th = document.createElement("th");
+    let text = document.createTextNode(key);
+    th.appendChild(text);
+    row.appendChild(th);
+  }}
+function generateTable(table, data) {
+  for (let element of data) {
+    let row = table.insertRow();
+    for (key in element) {
+      let cell = row.insertCell();
+      let text = document.createTextNode(element[key]);
+      cell.appendChild(text);
+    }
+  }}
+
+let nutrientsTable = document.getElementById("nutrientsTable");
+let nutrientsTableHead  = ['NutrientID','NutrientName','NutrientValue','NutrientUnit'];
+let nutrients = JSON.parse( {{ json_nutrients | tojson }} );
+
+generateTableHead(nutrientsTable,nutrientsTableHead);
+generateTable(nutrientsTable,nutrients)
+    </script>-->
+
+    <table >
+    <thead>
+        <tr>
+            <th style="text-align: left">NutrientID</th>
+            <th style="text-align: left">NutrientName</th>
+            <th style="text-align: left">NutrientValue</th>
+            <th style="text-align: left">NutrientUnit</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for nutrient in nutrients %}
+            <tr>
+                <td>
+                    {{ nutrient[0] }}
+                </td>
+                <td>
+                    {{ nutrient[1] }}
+                </td>
+                <td class="nutrients">
+                    {{ nutrient[2] }}
+                </td>
+                <td>
+                    {{ nutrient[3] }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}

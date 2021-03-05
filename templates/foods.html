@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block header %}
+    <h1>{% block title %} Foods {% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+    <table>
+    <thead>
+        <tr>
+            <th style="text-align: left">FoodID</th>
+            <th style="text-align: left">FoodDescription</th>
+            <th style="text-align: left">FoodDescriptionF</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for food in foods %}
+            <tr>
+                <td>
+                   <a href="{{ url_for('one_food', id=food[0]) }}">
+                       {{ food[0] }}
+                   </a>
+                </td>
+                <td>
+                    {{ food[1] }}
+                </td>
+                <td>
+                    {{ food[2] }}
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+{% endblock %}

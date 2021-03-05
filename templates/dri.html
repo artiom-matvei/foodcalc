@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Nutrients DRI{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+  <form method="post">
+    <input type="submit" value="Update DRI">
+    <table>
+    {% for nutrient in joined_dri %}
+        <tr>
+        <td><input
+                id="{{ nutrient['NutrientID'] }}"
+                name="{{ nutrient['NutrientID'] }}"
+                type="number"
+                value="{{ nutrient['DRI'] }}"
+        ></td>
+        <td><label for="{{ nutrient['NutrientID'] }}">
+            {{ nutrient['NutrientUnit'] }} {{ nutrient['NutrientName'] }}</label></td>
+        </tr>
+    {% endfor %}
+    </table>
+{#    <label for="username">Username</label>#}
+{#    <input name="username" id="username" required>#}
+{#    <label for="password">Password</label>#}
+{#    <input type="password" name="password" id="password" required>#}
+{#    <input type="submit" value="Log In">#}
+  </form>
+{% endblock %}
