@@ -12,6 +12,8 @@
         {% if g.user %}
             <li><span>{{ g.user['username'] }}</span>
             <li><a href="{{ url_for('logout') }}">Log Out</a>
+            <li><a href="{{ url_for('dri') }}">View or change your daily recommended intake of nutrients</a>
+            <li><a href="{{ url_for('eaten_food') }}">View eaten food</a>
         {% else %}
             <li><a href="{{ url_for('register') }}">Register</a>
             <li><a href="{{ url_for('login') }}">Log In</a>

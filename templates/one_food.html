@@ -19,17 +19,25 @@
 {% endblock %}
 
 {% block content %}
-    <p>
     <form method="post">
         <label>Amounts per
             <input name="serving_amount" id="serving_amount" type="number" value="{{ serving_amount }}">
             g of food.
         </label>
-        <input id="updateNutrientAmounts" type="submit" value="Update nutrient amounts">
+        <input id="updateNutrientAmounts" name="action" type="submit" value="Update nutrient amounts">
+    </form>
+
+<form method="post">
+        <label>Add
+            <input name="eaten_amount" id="eaten_amount" type="number" value="{{ serving_amount }}">
+            g of food eaten on
+        </label>
+    <label for="eaten_data"> <input name="eaten_date" id="eaten_data" type="date"> .</label>
+        <input id="add_eaten_food" name="action" type="submit" value="Add food">
     </form>
 
 
-    {# choose different amounts #} </p>
+    {# choose different amounts #}
     {# add a form to choose different amounts #}
 
     <table>

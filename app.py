@@ -40,12 +40,23 @@ def all_foods():
 @app.route('/<int:id>/<float:serving_amount>', methods=('GET', 'POST'))
 @app.route('/<int:id>', methods=('GET', 'POST'))
 def one_food(id, serving_amount=100., measure_id=1455):
-    if request.method == 'POST':
-        serving_amount = request.form['serving_amount']
-
-        return redirect(url_for('one_food', id=id, serving_amount=serving_amount))
-
     db = get_db()
+
+    if request.method == 'POST':
+        if request.form['action'] == "Update nutrient amounts":
+            serving_amount = request.form['serving_amount']
+            print('Update nutrient amounts', file=sys.stderr)
+            return redirect(url_for('one_food', id=id, serving_amount=serving_amount))
+        elif request.form['action'] == "Add food":
+            print('Add food', file=sys.stderr)
+            db.execute(
+                'INSERT INTO user_eaten (user_id, food_id, grams, date_of_consumption, date_of_entry) '
+                'VALUES (?,?,?,?,?)',
+                (session.get('user_id'), id, serving_amount, request.form['eaten_date'], request.form['eaten_date'])
+            )
+            db.commit()
+            return redirect(url_for('all_foods'))
+
     food = db.execute(
         'SELECT FoodID, FoodDescription, FoodDescriptionF FROM food_name WHERE FoodID = ?', (id,)
     ).fetchone()
@@ -151,34 +162,55 @@ def logout():
 @login_required
 def dri():
     db = get_db()
-    user_id = session.get('user.id')
-    nutrient_dri: list = db.execute('SELECT NutrientID, DRI FROM user_dri WHERE UserID = ?', (user_id,)).fetchall()
+    user_id = session.get('user_id')
     joined_dri = db.execute(
         'SELECT nutrient_name.NutrientID, DRI, NutrientUnit, NutrientName from nutrient_name '
-        'LEFT JOIN ( SELECT * FROM user_dri  WHERE UserID=2 ) as ud '
-        'on nutrient_name.NutrientID = ud.NutrientID'
+        'LEFT JOIN ( SELECT * FROM user_dri  WHERE UserID=? ) as ud '
+        'on nutrient_name.NutrientID = ud.NutrientID', (user_id,)
     ).fetchall()
 
-    nutrient_dri_dict: dict = {nutrient['NutrientID']: nutrient['DRI'] for nutrient in nutrient_dri}
-
-    nutrient_names: list = db.execute('SELECT NutrientID, NutrientCode, NutrientSymbol, NutrientUnit, NutrientName, '
-                                      'NutrientNameF, Tagname, NutrientDecimals FROM nutrient_name').fetchall()
-    nutrient_names_dict = {
-        nutrient['NutrientID']: {'NutrientName': nutrient['NutrientName'], 'NutrientUnit': nutrient['NutrientUnit']} for
-        nutrient in nutrient_names}
-
     if request.method == 'POST':
+        insert_list = []
         for nutrient in joined_dri:
-            if str(nutrient['NutrientID']) in request.form:
-                #print('inside if', file=sys.stderr)
-                print(request.form[str(nutrient['NutrientID'])], file=sys.stderr)
+            nutrient_id_str = str(nutrient['NutrientID'])
+            nutrient_amount = request.form[nutrient_id_str]
+            cond_a = nutrient_id_str in request.form
+            cond_b = nutrient_amount.__ne__('')
+            if cond_a and cond_b:
+                insert_list.append(
+                    (user_id, nutrient_id_str, nutrient_amount, user_id, nutrient_id_str, nutrient_amount))
 
-        # db.executemany('INSERT INTO user_dri (UserID, NutrientID, DRI) VALUES (?,?,?)'
-        #                'ON CONFLICT(UserID,NutrientID) DO '
-        #                'UPDATE SET (UserID, NutrientID, DRI) = (?,?,?)',)
+        db.executemany('INSERT INTO user_dri (UserID, NutrientID, DRI) VALUES (?,?,?)'
+                       'ON CONFLICT(UserID,NutrientID) DO '
+                       'UPDATE SET (UserID, NutrientID, DRI) = (?,?,?)', insert_list)
+        db.commit()
+
+        return redirect(url_for('dri'))
 
     return render_template('dri.html', joined_dri=joined_dri)
 
 
+@app.route('/eatenfood')
+def eaten_food():
+    db = get_db()
+    user_id = str(session.get('user_id'))
+    eaten_food_join = db.execute(
+        'SELECT ID, FOOD_ID, FoodDescription, GRAMS,MAX(CASE WHEN na.NutrientID=203 THEN GRAMS*na.NutrientValue/100 END) as "Prots",MAX(CASE WHEN na.NutrientID=204 THEN GRAMS*na.NutrientValue/100 END) as 'Fats',MAX(CASE WHEN na.NutrientID=205 THEN GRAMS*na.NutrientValue/100 END) as 'Carbs',MAX(CASE WHEN na.NutrientID=301 THEN GRAMS*na.NutrientValue/100 END) as 'Calcium',MAX(CASE WHEN na.NutrientID=303 THEN GRAMS*na.NutrientValue/100 END) as 'Iron',MAX(CASE WHEN na.NutrientID=304 THEN GRAMS*na.NutrientValue/100 END) as 'Magnesium',MAX(CASE WHEN na.NutrientID=305 THEN GRAMS*na.NutrientValue/100 END) as 'Phosphorus',MAX(CASE WHEN na.NutrientID=319 THEN GRAMS*na.NutrientValue/100 END) as 'Retinol', DATE_OF_CONSUMPTION FROM user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id JOIN nutrient_amount na on fn.FoodID = na.FoodID GROUP BY ue.id'
+    ).fetchall()
+    eaten_food_db = db.execute(
+        'SELECT id, food_id, grams, date_of_consumption, date_of_entry, fn.FoodDescription '
+        'FROM user_eaten INNER JOIN food_name fn on fn.FoodID = user_eaten.food_id WHERE user_id=?', (user_id,)
+                               ).fetchall()
+
+    nutrient_dri = db.execute('SELECT NutrientID, DRI FROM user_dri WHERE UserID=?', (user_id,)).fetchall()
+
+    for i, food in enumerate(eaten_food_db):
+        eaten_food_nutrients = db.execute('SELECT NutrientID, NutrientValue FROM nutrient_amount WHERE FoodID=?',
+                                          (food['food_id'],)
+                                          ).fetchall()
+
+    return render_template('eaten_food.html', eaten_food_db=eaten_food_db, nutrient_dri=nutrient_dri)
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()

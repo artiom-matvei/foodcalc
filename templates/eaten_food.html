@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Nutrients DRI{% endblock %}</h1>
+{% endblock %}
+
+
+{% block content %}
+    <table>
+    <thead>
+    <tr><th>FoodID<th>Food name<th>Grams<th>Date of Consumption</th></tr>
+    <tbody>
+    {% for food_row in eaten_food_db %}
+        <tr>
+        <td>{{ food_row['food_id'] }}</td>
+        <td>{{ food_row['FoodDescription'] }}</td>
+        <td>{{ food_row['grams'] }}</td>
+        <td>{{ food_row['date_of_consumption'] }}</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+    </table>
+
+{% endblock %}
