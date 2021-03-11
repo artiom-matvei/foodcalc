@@ -2,11 +2,13 @@ import functools
 import os
 import sqlite3
 import sys
+from jinjasql import JinjaSql
 
 from flask import Flask, g, render_template, current_app, request, json, redirect, url_for, flash, session
 from werkzeug.security import generate_password_hash, check_password_hash
 
 app = Flask(__name__)
+j = JinjaSql()
 app.config.from_mapping(
     DATABASE=os.path.join(app.instance_path, 'foodcalc2.sqlite'),
     SECRET_KEY="fgaeqjfvciu32149"
@@ -190,17 +192,101 @@ def dri():
     return render_template('dri.html', joined_dri=joined_dri)
 
 
+#
+# @app.route('/eatenfood')
+# def eaten_food():
+#     db = get_db()
+#     user_id = str(session.get('user_id'))
+#     eaten_food_join = db.execute(
+#         """ WITH foodAndNutrientsEaten AS (
+#             SELECT ID, FOOD_ID, FoodDescription, GRAMS,
+#                    MAX(CASE WHEN na.NutrientID=203 THEN GRAMS*na.NutrientValue/100 END) as Prots203,
+#                    MAX(CASE WHEN na.NutrientID=204 THEN GRAMS*na.NutrientValue/100 END) as Fats204,
+#                    MAX(CASE WHEN na.NutrientID=205 THEN GRAMS*na.NutrientValue/100 END) as Carbs205,
+#                    MAX(CASE WHEN na.NutrientID=301 THEN GRAMS*na.NutrientValue/100 END) as Calcium301,
+#                    MAX(CASE WHEN na.NutrientID=303 THEN GRAMS*na.NutrientValue/100 END) as Iron303,
+#                    MAX(CASE WHEN na.NutrientID=304 THEN GRAMS*na.NutrientValue/100 END) as Magnesium304,
+#                    MAX(CASE WHEN na.NutrientID=305 THEN GRAMS*na.NutrientValue/100 END) as Phosphorus305,
+#                    MAX(CASE WHEN na.NutrientID=319 THEN GRAMS*na.NutrientValue/100 END) as Retinol319,
+#                    DATE_OF_CONSUMPTION
+#             FROM user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id
+#             JOIN nutrient_amount na on fn.FoodID = na.FoodID WHERE user_id=2 GROUP BY ue.id
+#             )
+#         SELECT * FROM foodAndNutrientsEaten
+#         """
+#         # 'SELECT ID, FOOD_ID, FoodDescription, GRAMS,MAX(CASE WHEN na.NutrientID=203 THEN GRAMS*na.NutrientValue/100
+#         # END) as "Prots",MAX(CASE WHEN na.NutrientID=204 THEN GRAMS*na.NutrientValue/100 END) as 'Fats',
+#         # MAX(CASE WHEN na.NutrientID=205 THEN GRAMS*na.NutrientValue/100 END) as 'Carbs',MAX(CASE WHEN
+#         # na.NutrientID=301 THEN GRAMS*na.NutrientValue/100 END) as 'Calcium',MAX(CASE WHEN na.NutrientID=303 THEN
+#         # GRAMS*na.NutrientValue/100 END) as 'Iron',MAX(CASE WHEN na.NutrientID=304 THEN GRAMS*na.NutrientValue/100
+#         # END) as 'Magnesium',MAX(CASE WHEN na.NutrientID=305 THEN GRAMS*na.NutrientValue/100 END) as 'Phosphorus',
+#         # MAX(CASE WHEN na.NutrientID=319 THEN GRAMS*na.NutrientValue/100 END) as 'Retinol', DATE_OF_CONSUMPTION FROM
+#         # user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id JOIN nutrient_amount na on fn.FoodID = na.FoodID
+#         # GROUP BY ue.id'
+#     ).fetchall()
+#     eaten_food_db = db.execute(
+#         'SELECT id, food_id, grams, date_of_consumption, date_of_entry, fn.FoodDescription '
+#         'FROM user_eaten INNER JOIN food_name fn on fn.FoodID = user_eaten.food_id WHERE user_id=?', (user_id,)
+#                                ).fetchall()
+#
+#     nutrient_dri = db.execute('SELECT NutrientID, DRI FROM user_dri WHERE UserID=?', (user_id,)).fetchall()
+#
+#     for i, food in enumerate(eaten_food_db):
+#         eaten_food_nutrients = db.execute('SELECT NutrientID, NutrientValue FROM nutrient_amount WHERE FoodID=?',
+#                                           (food['food_id'],)
+#                                           ).fetchall()
+#
+#     return render_template('eaten_food.html', eaten_food_db=eaten_food_db, nutrient_dri=nutrient_dri)
+#
+
 @app.route('/eatenfood')
 def eaten_food():
     db = get_db()
     user_id = str(session.get('user_id'))
+    template = """
+    SELECT ID, FOOD_ID, FoodDescription, GRAMS
+    {% for nutrientID in nutrientIDS %}
+        , MAX(CASE WHEN na.NutrientID={{ nutrientID }} THEN GRAMS*na.NutrientValue/100 END) as {{ nutrientID }}
+    {% endfor %}
+        , DATE_OF_CONSUMPTION
+    FROM user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id 
+    JOIN nutrient_amount na on fn.FoodID = na.FoodID WHERE user_id=2 GROUP BY ue.id
+    """
+
+    data = [203, 204]
+    query, bind_params = j.prepare_query(template, data)
     eaten_food_join = db.execute(
-        'SELECT ID, FOOD_ID, FoodDescription, GRAMS,MAX(CASE WHEN na.NutrientID=203 THEN GRAMS*na.NutrientValue/100 END) as "Prots",MAX(CASE WHEN na.NutrientID=204 THEN GRAMS*na.NutrientValue/100 END) as 'Fats',MAX(CASE WHEN na.NutrientID=205 THEN GRAMS*na.NutrientValue/100 END) as 'Carbs',MAX(CASE WHEN na.NutrientID=301 THEN GRAMS*na.NutrientValue/100 END) as 'Calcium',MAX(CASE WHEN na.NutrientID=303 THEN GRAMS*na.NutrientValue/100 END) as 'Iron',MAX(CASE WHEN na.NutrientID=304 THEN GRAMS*na.NutrientValue/100 END) as 'Magnesium',MAX(CASE WHEN na.NutrientID=305 THEN GRAMS*na.NutrientValue/100 END) as 'Phosphorus',MAX(CASE WHEN na.NutrientID=319 THEN GRAMS*na.NutrientValue/100 END) as 'Retinol', DATE_OF_CONSUMPTION FROM user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id JOIN nutrient_amount na on fn.FoodID = na.FoodID GROUP BY ue.id'
+        """ WITH foodAndNutrientsEaten AS (
+            SELECT ID, FOOD_ID, FoodDescription, GRAMS,
+                   MAX(CASE WHEN na.NutrientID=203 THEN GRAMS*na.NutrientValue/100 END) as Prots203,
+                   MAX(CASE WHEN na.NutrientID=204 THEN GRAMS*na.NutrientValue/100 END) as Fats204,
+                   MAX(CASE WHEN na.NutrientID=205 THEN GRAMS*na.NutrientValue/100 END) as Carbs205,
+                   MAX(CASE WHEN na.NutrientID=301 THEN GRAMS*na.NutrientValue/100 END) as Calcium301,
+                   MAX(CASE WHEN na.NutrientID=303 THEN GRAMS*na.NutrientValue/100 END) as Iron303,
+                   MAX(CASE WHEN na.NutrientID=304 THEN GRAMS*na.NutrientValue/100 END) as Magnesium304,
+                   MAX(CASE WHEN na.NutrientID=305 THEN GRAMS*na.NutrientValue/100 END) as Phosphorus305,
+                   MAX(CASE WHEN na.NutrientID=319 THEN GRAMS*na.NutrientValue/100 END) as Retinol319, 
+                   DATE_OF_CONSUMPTION
+            FROM user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id 
+            JOIN nutrient_amount na on fn.FoodID = na.FoodID WHERE user_id=2 GROUP BY ue.id
+            )
+        SELECT * FROM foodAndNutrientsEaten
+        """
+        # 'SELECT ID, FOOD_ID, FoodDescription, GRAMS,MAX(CASE WHEN na.NutrientID=203 THEN GRAMS*na.NutrientValue/100
+        # END) as "Prots",MAX(CASE WHEN na.NutrientID=204 THEN GRAMS*na.NutrientValue/100 END) as 'Fats',
+        # MAX(CASE WHEN na.NutrientID=205 THEN GRAMS*na.NutrientValue/100 END) as 'Carbs',MAX(CASE WHEN
+        # na.NutrientID=301 THEN GRAMS*na.NutrientValue/100 END) as 'Calcium',MAX(CASE WHEN na.NutrientID=303 THEN
+        # GRAMS*na.NutrientValue/100 END) as 'Iron',MAX(CASE WHEN na.NutrientID=304 THEN GRAMS*na.NutrientValue/100
+        # END) as 'Magnesium',MAX(CASE WHEN na.NutrientID=305 THEN GRAMS*na.NutrientValue/100 END) as 'Phosphorus',
+        # MAX(CASE WHEN na.NutrientID=319 THEN GRAMS*na.NutrientValue/100 END) as 'Retinol', DATE_OF_CONSUMPTION FROM
+        # user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id JOIN nutrient_amount na on fn.FoodID = na.FoodID
+        # GROUP BY ue.id'
     ).fetchall()
+
     eaten_food_db = db.execute(
         'SELECT id, food_id, grams, date_of_consumption, date_of_entry, fn.FoodDescription '
         'FROM user_eaten INNER JOIN food_name fn on fn.FoodID = user_eaten.food_id WHERE user_id=?', (user_id,)
-                               ).fetchall()
+    ).fetchall()
 
     nutrient_dri = db.execute('SELECT NutrientID, DRI FROM user_dri WHERE UserID=?', (user_id,)).fetchall()
 
