@@ -6,19 +6,44 @@
 
 
 {% block content %}
+    <div> {#class="container">#}
     <table>
     <thead>
-    <tr><th>FoodID<th>Food name<th>Grams<th>Date of Consumption</th></tr>
+    <tr><th>FoodID Click on button below to remove entry<th>Food name<th>Grams<th>Date of Consumption
+    {% for nutrientID in nutrient_str_IDS %}
+        <th> {{ nutrientID }} {{ nutrient_dri_dict[nutrientID|int]['NutrientName'] }}
+    {% endfor %}
+    </th></tr>
     <tbody>
     {% for food_row in eaten_food_db %}
         <tr>
-        <td>{{ food_row['food_id'] }}</td>
+        <td>
+            {{ food_row['food_id'] }}
+            <form method="post">
+                <input id="deleteFoodEntry" name="action" type="submit" value={{ food_row['ID'] }}>
+            </form>
+        </td>
         <td>{{ food_row['FoodDescription'] }}</td>
         <td>{{ food_row['grams'] }}</td>
         <td>{{ food_row['date_of_consumption'] }}</td>
+            {% for nutrientID in nutrient_str_IDS %} <td> {{ "%3.2f" % (food_row[nutrientID]) }} </td>{% endfor %}
         </tr>
     {% endfor %}
+    <tr>
+        <td> </td>
+        <td> Nutrient totals </td>
+        <td> </td>
+        <td> </td>
+            {% for nutrientID in nutrient_num_IDS %} <td> {{ "%3.2f" % (nutrient_totals[nutrientID]) }} </td>{% endfor %}
+    </tr>
+    <tr>
+        <td> </td>
+        <td> Nutrient dri percentage </td>
+        <td> </td>
+        <td> </td>
+            {% for nutrientID in nutrient_num_IDS %} <td> {{ "%.2f" % (nutrient_dri_perc_dict[nutrientID]) }} </td>{% endfor %}
+    </tr>
     </tbody>
     </table>
-
+    </div>
 {% endblock %}
