@@ -23,6 +23,7 @@
 <section class="content">
   <header>
     {% block header %}{% endblock %}
+  <p>The current version does not allow yet to store eaten foods in the database for a long time. This is due to the fact that the database is included in the deployment. It is needed to make the database independent of the deployment.</p>
   </header>
   {% for message in get_flashed_messages() %}
     <div class="flash">{{ message }}</div>
