@@ -210,8 +210,9 @@ def eaten_food():
                               (user_id,)).fetchall()
 
     # noinspection SqlResolve
-    template = """SELECT ID, FOOD_ID, FoodDescription, GRAMS {% for nutrientID in nutrientIDS %}, IFNULL( MAX(CASE WHEN na.NutrientID={{ nutrientID }} THEN GRAMS*na.NutrientValue/100 END),0) as '{{ nutrientID }}' {% endfor %}, DATE_OF_CONSUMPTION FROM user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id JOIN nutrient_amount na on fn.FoodID = na.FoodID WHERE user_id=2 GROUP BY ue.id"""
-    data = {'nutrientIDS': [nutrient['NutrientID'] for nutrient in nutrient_dri]}
+    template = """SELECT ID, FOOD_ID, FoodDescription, GRAMS {% for nutrientID in nutrientIDS %}, IFNULL( MAX(CASE WHEN na.NutrientID={{ nutrientID }} THEN GRAMS*na.NutrientValue/100 END),0) as '{{ nutrientID }}' {% endfor %}, DATE_OF_CONSUMPTION FROM user_eaten ue JOIN food_name fn ON fn.FoodID=ue.food_id JOIN nutrient_amount na on fn.FoodID = na.FoodID WHERE user_id={{ userID }} GROUP BY ue.id"""
+    data = {'nutrientIDS': [nutrient['NutrientID'] for nutrient in nutrient_dri],
+            'userID': user_id}
     query, bind_params = j.prepare_query(template, data)
 
     eaten_food_db = db.execute(query % bind_params).fetchall()
