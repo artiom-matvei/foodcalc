@@ -1,6 +1,6 @@
 # foodcalc
 
-Application is deployed at https://nutrient-calculator.herokuapp.com/ (taken down because of a bug that was found, only one user eaten food is shown because it was hard coded in template variable in eaten_food() function in app.py. Change user_id=2 to user_id=user_id and I think it should work.)
+Application is deployed at https://nutrient-calculator.herokuapp.com/
 
 1. To use it, create an account by registering. 
 2. Login with the credentials. 
