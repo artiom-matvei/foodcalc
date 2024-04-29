@@ -1,6 +1,13 @@
 # foodcalc
 
-Application is deployed at https://nutrient-calculator.herokuapp.com/
+## Deployment
+~~Application is deployed at https://nutrient-calculator.herokuapp.com/~~ 
+
+Application can be deployed locally by 
+1. Installing the requirements.txt dependencies.
+2. Running `app.py`
+
+## Usage
 
 1. To use it, create an account by registering. 
 2. Login with the credentials. 
