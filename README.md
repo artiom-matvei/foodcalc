@@ -4,7 +4,7 @@
 ~~Application is deployed at https://nutrient-calculator.herokuapp.com/~~ 
 
 Application can be deployed locally by 
-1. Installing the requirements.txt dependencies.
+1. Installing the `requirements.txt` dependencies.
 2. Running `app.py`
 
 ## Usage
